@@ -1,0 +1,66 @@
+name: Android E2E Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instala Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Instala dependencias
+        run: npm install
+
+      - name: Instala Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Descarga el APK de la app
+        run: |
+          mkdir -p AppiumApps
+          curl -L -o AppiumApps/booking-com-32-9.apk "https://drive.google.com/file/d/1ruY_5qcqWlsE3-W3rgXpFyyMiO59wFUc/view?usp=sharing/booking-com-32-9.apk"
+
+      - name: Instala Appium
+        run: npm install -g appium
+
+      - name: Instala Android SDK y emulador
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: default
+          arch: x86_64
+          force-avd-creation: true
+          emulator-options: -no-window -no-audio
+          disable-animations: true
+          script: echo "Emulador listo"
+
+      - name: Inicia Appium en background
+        run: appium --log-level error &
+
+      - name: Espera a que Appium esté listo
+        run: npx wait-on tcp:4723
+
+      - name: Ejecuta pruebas E2E
+        run: npm test
+
+      - name: Genera reporte Allure
+        run: npm run allure:generate
+
+      - name: Sube reporte Allure como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
