@@ -1,4 +1,7 @@
+import ResultsPage from '../pageobjects/ResultsPage';
+import RoomPage from '../pageobjects/RoomPage';
 import SearchPage from '../pageobjects/SearchPage';
+import GuestPage from '../pageobjects/GuestPage';
 import { handleFirstRunPopups } from '../helpers/firstRunHelper';
 
 
@@ -34,7 +37,19 @@ describe('Booking.com - Reserva de alojamiento', () => {
         await expect(SearchPage.searchButton).toBeEnabled();
         await SearchPage.searchButton.click();
 
-        // 5. Continuar con el flujo: seleccionar resultado, habitación, reservar, etc.
-        // Recuerda crear nuevos PageObjects para las siguientes pantallas y usar aserciones donde corresponda.*/
+        //Selecciona el segundo resultado de la búsqueda
+        await ResultsPage.selectResultByIndex(1); // Selecciona el segundo resultado
+
+        await RoomPage.seeAvailableRoom(); 
+        
+        await RoomPage.selectRoom();      // Selecciona la primera habitación
+
+        let priceRoom = await RoomPage.priceRoomLabel.getText(); // Obtiene el precio de la habitación seleccionada
+        await expect(await RoomPage.priceRoomFoot.getText()).toContain(priceRoom);
+
+        await RoomPage.reserveRoom();             // Reserva la habitación
+
+        await GuestPage.fillGuestData('Danilo', 'Ramirez', 'daniloerj@hotmail.com', 'Perú','123456789','Leisure');
+
     });
 });
